@@ -16,8 +16,14 @@ export const BLOCK_SIZE = 40;
 export class PlayerController extends Component {
   @property(Animation)
   BodyAnimation: Animation = null;
-  start() {
-    input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+  start() {}
+
+  setInputActive(active: boolean) {
+    if (active) {
+      input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+    } else {
+      input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+    }
   }
 
   //used to judge if the player is jumping.
@@ -44,6 +50,8 @@ export class PlayerController extends Component {
 
   // store the final position of the player, when the player's jumping action ends, it will be used directly to avoid cumulative errors.
   private _targetPos: Vec3 = new Vec3();
+
+  private _curMoveIndex: number = 0;
 
   onMouseUp(event: EventMouse) {
     if (event.getButton() === EventMouse.BUTTON_LEFT) this.jumpByStep(1);
@@ -74,6 +82,18 @@ export class PlayerController extends Component {
       if (step === 1) this.BodyAnimation.play("oneStep");
       else if (step === 2) this.BodyAnimation.play("twoStep");
     }
+
+    this._curMoveIndex += step;
+  }
+
+  onOnceJumpEnd() {
+    this.node.emit("JumpEnd", this._curMoveIndex);
+  }
+
+  reset() {
+    this._curMoveIndex = 0;
+    this.node.getPosition(this._curPos);
+    this._targetPos.set(0, 0, 0);
   }
 
   update(deltaTime: number) {
@@ -85,6 +105,7 @@ export class PlayerController extends Component {
         this.node.setPosition(this._targetPos);
         //clear jump state
         this._startJump = false;
+        this.onOnceJumpEnd();
       } else {
         //if it still needs to move.
         // copy the position of the node.
