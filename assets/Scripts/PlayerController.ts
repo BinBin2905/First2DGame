@@ -3,6 +3,7 @@ import {
   Animation,
   Component,
   EventMouse,
+  EventTouch,
   input,
   Input,
   Node,
@@ -16,13 +17,28 @@ export const BLOCK_SIZE = 40;
 export class PlayerController extends Component {
   @property(Animation)
   BodyAnimation: Animation = null;
+
+  @property(Node)
+  leftTouch: Node = null;
+
+  @property(Node)
+  rightTouch: Node = null;
+
   start() {}
 
   setInputActive(active: boolean) {
     if (active) {
+      //for pc
       input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+      //for mobile
+      this.leftTouch.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
+      this.rightTouch.on(Input.EventType.TOUCH_START, this.onTouchStart, this);
     } else {
+      //for pc
       input.off(Input.EventType.MOUSE_UP, this.onMouseUp, this);
+      //for mobile
+      this.leftTouch.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
+      this.rightTouch.off(Input.EventType.TOUCH_START, this.onTouchStart, this);
     }
   }
 
@@ -56,6 +72,15 @@ export class PlayerController extends Component {
   onMouseUp(event: EventMouse) {
     if (event.getButton() === EventMouse.BUTTON_LEFT) this.jumpByStep(1);
     else if (event.getButton() === EventMouse.BUTTON_RIGHT) this.jumpByStep(2);
+  }
+
+  onTouchStart(event: EventTouch) {
+    const target = event.target as Node;
+    if (target?.name == "LeftTouch") {
+      this.jumpByStep(1);
+    } else {
+      this.jumpByStep(2);
+    }
   }
 
   jumpByStep(step: number) {
