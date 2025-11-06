@@ -1,5 +1,6 @@
 import {
   _decorator,
+  Animation,
   Component,
   EventMouse,
   input,
@@ -13,6 +14,8 @@ export const BLOCK_SIZE = 40;
 
 @ccclass("PlayerController")
 export class PlayerController extends Component {
+  @property(Animation)
+  BodyAnimation: Animation = null;
   start() {
     input.on(Input.EventType.MOUSE_UP, this.onMouseUp, this);
   }
@@ -24,6 +27,7 @@ export class PlayerController extends Component {
   private _jumpStep: number = 0;
 
   //the time it takes for the player to jump once.
+
   private _jumpTime: number = 0.1;
 
   //the time that the player's current jump action has taken, should be set to 0 each time the player jumps, when it reaches the value of `_jumpTime`, the jump action is completed.
@@ -52,6 +56,11 @@ export class PlayerController extends Component {
     this._startJump = true;
     this._jumpStep = step;
     this._curJumpTime = 0;
+    // Get jump time from animation duration.
+    const clipName = step == 1 ? "oneStep" : "twoStep";
+    const state = this.BodyAnimation.getState(clipName);
+    this._jumpTime = state.duration;
+    //calculate the jumping speed.
     this._curJumpSpeed = (this._jumpStep * BLOCK_SIZE) / this._jumpTime;
     this.node.getPosition(this._curPos);
     //calculate the final position of the node which will be used when the jumping action ends.
@@ -60,6 +69,11 @@ export class PlayerController extends Component {
       this._curPos,
       new Vec3(this._jumpStep * BLOCK_SIZE, 0, 0)
     );
+    //play the jump animation.
+    if (this.BodyAnimation) {
+      if (step === 1) this.BodyAnimation.play("oneStep");
+      else if (step === 2) this.BodyAnimation.play("twoStep");
+    }
   }
 
   update(deltaTime: number) {
